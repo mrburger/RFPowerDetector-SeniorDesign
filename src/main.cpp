@@ -1,9 +1,27 @@
 #include <Arduino.h>
+#include<defs.h>
 
-void setup() {
-  // put your setup code here, to run once:
+#include <Metro.h> // Task scheduler
+
+/*-- Function Definition --*/
+void toggleLED();
+
+Metro blinkTimer = Metro(LED_BLINK_DELAY); // Idle status LED Blink
+
+void setup() 
+{
+  // TODO: Initialize Flash and RAM
 }
 
-void loop() {
-  // put your main code here, to run repeatedly:
+void loop() 
+{
+  if (blinkTimer.check() == 1)
+  {
+    toggleLED();
+  }
+}
+
+void toggleLED()
+{
+  digitalWrite(LED_BUILTIN, !digitalRead(LED_BUILTIN));
 }
