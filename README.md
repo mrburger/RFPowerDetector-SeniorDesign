@@ -20,7 +20,8 @@ This repository houses the C++ / PlatformIO files used in the chosen microcontro
 			<li>16MB NOR Flash (Planned)</li>
 		</ul>
 	</li>
-	<li>Power Analyzer IC (WIP)</li>
+	<li>AD8364A - Power Analyzer IC</li>
+	<li>MCP33151 - 14-bit ADC</li>
 </ul>
 </details>
 
