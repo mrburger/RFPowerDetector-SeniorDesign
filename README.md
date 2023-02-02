@@ -8,34 +8,6 @@ For the University of Cincinnati CEAS Senior Design Capstone, 2023.
 
 This repository houses the C++ / PlatformIO files used in the chosen microcontroller, as well as other documentation.
 
-## Tools
-<br>
-<details>
-<summary>Hardware</summary>
-<ul>
-	<li>
-		Teensy 4.1
-		<ul>
-			<li>8MB PSRAM addon</li>
-			<li>16MB NOR Flash (Planned)</li>
-		</ul>
-	</li>
-	<li> AD8364A - Power Analyzer IC</li>
-	<li> MCP33151 - 14-bit ADC</li>
-	<li> SN74AXC4T774PWR - Voltage Translator</li>
-	<li> W25Q128JVSIQ - 128Mb Serial Flash Memory</li>
-</ul>
-</details>
-
-<br>
-<details>
-<summary>Software</summary>
-<ul>
-	<li>Visual Studio Code</li>
-	<li>PlatformIO</li>
-</ul>
-</details>
-
 ## Group Members
 <br>
 <details>
@@ -97,6 +69,50 @@ This repository houses the C++ / PlatformIO files used in the chosen microcontro
 	</li>
 </ul>
 </details>
+
+## Advisor
+<br>
+<details>
+<summary>Richard Hunter</summary>
+<ul>
+	<li>
+		Teaches RF and Microwave Communications </li>
+		<li>Expertise</li>
+		<ul>
+			<li>RF and Analog Design</li>
+		</ul>
+	</li>
+</ul>
+</details>
+
+## Tools
+<br>
+<details>
+<summary>Hardware</summary>
+<ul>
+	<li>
+		Teensy 4.1
+		<ul>
+			<li>8MB PSRAM addon</li>
+			<li>16MB NOR Flash (Planned)</li>
+		</ul>
+	</li>
+	<li> AD8364A - Power Analyzer IC</li>
+	<li> MCP33151 - 14-bit ADC</li>
+	<li> SN74AXC4T774PWR - Voltage Translator</li>
+	<li> W25Q128JVSIQ - 128Mb Serial Flash Memory</li>
+</ul>
+</details>
+
+<br>
+<details>
+<summary>Software</summary>
+<ul>
+	<li>Visual Studio Code</li>
+	<li>PlatformIO</li>
+</ul>
+</details>
+
 
 ## Project Description
 <br>
