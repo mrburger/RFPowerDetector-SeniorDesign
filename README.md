@@ -20,8 +20,9 @@ This repository houses the C++ / PlatformIO files used in the chosen microcontro
 			<li>16MB NOR Flash (Planned)</li>
 		</ul>
 	</li>
-	<li>AD8364A - Power Analyzer IC</li>
-	<li>MCP33151 - 14-bit ADC</li>
+	<li> AD8364A - Power Analyzer IC</li>
+	<li> MCP33151 - 14-bit ADC</li>
+	<li> SN74AXC4T774PWR - Voltage Translator</li>
 </ul>
 </details>
 
@@ -31,6 +32,68 @@ This repository houses the C++ / PlatformIO files used in the chosen microcontro
 <ul>
 	<li>Visual Studio Code</li>
 	<li>PlatformIO</li>
+</ul>
+</details>
+
+## Group Members
+<br>
+<details>
+<summary>Cole Trejchel</summary>
+<ul>
+	<li>
+		Electrical Engineering Major </li>
+		<li>Skills</li>
+		<ul>
+			<li>CAD</li>
+			<li>Revit</li>
+			<li>Basic Circuit Design</li>
+		</ul>
+	</li>
+</ul>
+</details>
+<br>
+<details>
+<summary>Michael Hudepohl</summary>
+<ul>
+	<li>
+		Electrical Engineering Major </li>
+		<li>Skills</li>
+		<ul>
+			<li>Soldering</li>
+			<li>RF Design</li>
+			<li>Antenna Design</li>
+		</ul>
+	</li>
+</ul>
+</details>
+<br>
+<details>
+<summary>Jake Parker</summary>
+<ul>
+	<li>
+		Electrical Engineering Major </li>
+		<li>Skills</li>
+		<ul>
+			<li>Soldering</li>
+			<li>RF Design</li>
+			<li>Altium Designer</li>
+		</ul>
+	</li>
+</ul>
+</details>
+<br>
+<details>
+<summary>Nicholai Lekson</summary>
+<ul>
+	<li>
+		Electrical Engineering Major </li>
+		<li>Skills</li>
+		<ul>
+			<li>Embedded Development</li>
+			<li>PCB Design</li>
+			<li>System Design</li>
+		</ul>
+	</li>
 </ul>
 </details>
 
