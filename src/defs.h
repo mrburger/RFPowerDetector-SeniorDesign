@@ -1,6 +1,5 @@
 #pragma once
-#include <RFInputADC.cpp> // RF Input ADC Object
-#include <RFSample.cpp>
+
 
 /*-- Pins --*/
 
@@ -29,4 +28,5 @@
 //const enum rfCSPins {outA = ADC_OUTA_CS_PIN, outB = ADC_OUTB_CS_PIN, outN = ADC_OUTN_CS_PIN, outP = ADC_OUTP_CS_PIN};
 #define RF_BUFFER_LENGTH 1000000 // Has to be an integer
 #define FILLARRAY(a,n) a[0]=n, memcpy( ((char*)a)+sizeof(a[0]), a, sizeof(a)-sizeof(a[0]) );
-#define SAMPLE_INVALID_VALUE RFSample(RFInputADC(-1), -1.0, -1)
+//#define SAMPLE_INVALID_VALUE RFSample()
+enum EnumADC { adcA, adcB, adcN, adcP};

@@ -6,13 +6,14 @@
 #include <i2c_device.h> // Teensy 4 I2C Library
 #include <Adafruit_GFX.h> // Graphics Lib
 #include <Adafruit_SSD1306.h> // Display Lib
-
+#include <RFInputADC.cpp> // RF Input ADC Object
+#include <RFSample.cpp> // RF Sample Structure
 
 /*-- Constants --*/
-const RFInputADC adcOutA = RFInputADC(ADC_OUTA_CS_PIN);
-const RFInputADC adcOutB = RFInputADC(ADC_OUTB_CS_PIN);
-const RFInputADC adcOutN = RFInputADC(ADC_OUTN_CS_PIN);
-const RFInputADC adcOutP = RFInputADC(ADC_OUTP_CS_PIN);
+const RFInputADC adcOutA = RFInputADC(ADC_OUTA_CS_PIN, adcA);
+const RFInputADC adcOutB = RFInputADC(ADC_OUTB_CS_PIN, adcB);
+const RFInputADC adcOutN = RFInputADC(ADC_OUTN_CS_PIN, adcN);
+const RFInputADC adcOutP = RFInputADC(ADC_OUTP_CS_PIN, adcP);
 RFInputADC rfADCArray[] = {adcOutA, adcOutB, adcOutN, adcOutP};
 
 /*-- Function Definition --*/
@@ -34,7 +35,8 @@ uint16_t directADCReadValue; // Prototyping ADC value. TODO: translate into volt
 uint64_t directADCCounter = 0; // Counts number of measurements in a window
 uint64_t directADCSum = 0;
 float directRollingAverage = 0.0;
-EXTMEM RFSample bigAssBuffer[RF_BUFFER_LENGTH];
+// Causes an issue
+EXTMEM float bigAssBuffer[RF_BUFFER_LENGTH];
 RFSample currentSample;
 
 bool displayInverted = false; // Inversion storage value
@@ -51,6 +53,7 @@ EXTMEM uint8_t animationData[FRAME_COUNT][DISPLAY_BYTES]; // 128 x 32 display fr
 
 void setup() 
 {
+  Serial.println("Starting Setup");
   // TODO: Initialize Flash and RAM
   // EXTMEM will store the big lookup tables and such in the 8MB addon PSRAM.
   // Copy these values from the SD card / Flash to the PSRAM on Init
@@ -76,12 +79,14 @@ void setup()
 
 
   // This copies frame data
+  /*
   const unsigned int frame_size = 256;
   for (int i = 0; i < FRAME_COUNT; i++)
   {
     //memcpy(animationData + FRAME_SIZE * i, &frames_data[i], FRAME_SIZE);
     memcpy(animationData[i], frames_data[i], sizeof(frames_data[i]));
   }
+  */
 
   // Begin Display
   /*
@@ -99,14 +104,16 @@ void setup()
 
 void loop() 
 {
+  currentSample = RFSample();
   // For each ADC, read the value
   for (RFInputADC selectedADC : rfADCArray)
   {
     directADCReadValue = getADCMeasure(selectedADC);
-    currentSample = RFSample(selectedADC, directADCReadValue, directADCCounter);
-    bigAssBuffer[directADCCounter] = currentSample;
+    currentSample.setValue(selectedADC.getEnumADC(), directADCReadValue);
+
   }
   // Do this first
+  bigAssBuffer[directADCCounter] = directADCReadValue;
   directADCReadValue = getADCMeasure(adcOutA);
   directADCCounter++; // Increment Counter
   directADCSum += directADCReadValue; // Add to rolling sum
@@ -126,7 +133,10 @@ void loop()
     Serial.print(", Voltage: ");
     Serial.println((directRollingAverage / ADC_MAX_BIT_VALUE) * 5.0);
 
-    FILLARRAY(bigAssBuffer, SAMPLE_INVALID_VALUE);
+    Serial.print("Big Ahh Buffer: ");
+    Serial.println(bigAssBuffer[directADCCounter - 1]); // Idk
+
+    FILLARRAY(bigAssBuffer, -256.0);
     directADCCounter = 0;
     directADCSum = 0;
   }
@@ -168,7 +178,7 @@ uint16_t getADCMeasure(RFInputADC selectedADC)
   SPI.endTransaction();
 
   uint16_t calculatedValue; //= biggerByte + smallerByte;
-  calculatedValue = (((uint16_t) biggerByte << 8 | smallerByte)); // Bit-bang math, don't stare.
-  calculatedValue = calculatedValue >> 2; // 14-bit device
+  calculatedValue = ((((uint16_t) biggerByte << 8) | smallerByte)); // Bit-bang math, don't stare.
+  calculatedValue = calculatedValue >> 1; // 14-bit device, shift once?
   return calculatedValue;
 }
