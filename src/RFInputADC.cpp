@@ -14,6 +14,11 @@ class RFInputADC
             csp = chipSelectPin;
         }
 
+        RFInputADC()
+        {
+            return; // WOW Hacky
+        }
+
         uint16_t getSelectPin()
         {
             return csp;
