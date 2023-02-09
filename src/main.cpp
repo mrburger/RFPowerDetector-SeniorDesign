@@ -6,13 +6,14 @@
 #include <i2c_device.h> // Teensy 4 I2C Library
 #include <Adafruit_GFX.h> // Graphics Lib
 #include <Adafruit_SSD1306.h> // Display Lib
-#include <RFInputADC.cpp> // RF Input ADC Object
+
 
 /*-- Constants --*/
 const RFInputADC adcOutA = RFInputADC(ADC_OUTA_CS_PIN);
 const RFInputADC adcOutB = RFInputADC(ADC_OUTB_CS_PIN);
 const RFInputADC adcOutN = RFInputADC(ADC_OUTN_CS_PIN);
 const RFInputADC adcOutP = RFInputADC(ADC_OUTP_CS_PIN);
+RFInputADC rfADCArray[] = {adcOutA, adcOutB, adcOutN, adcOutP};
 
 /*-- Function Definition --*/
 void toggleLED();
@@ -28,10 +29,13 @@ Metro animationTimer = Metro(250); // 500 ms
 IntervalTimer sampleTimer; 
 
 /*-- Variables --*/
+SPISettings spiADCSettings(SPI_CLK_SPEED, MSBFIRST, SPI_MODE0); // MCP33151 Maximums
 uint16_t directADCReadValue; // Prototyping ADC value. TODO: translate into voltage
 uint64_t directADCCounter = 0; // Counts number of measurements in a window
 uint64_t directADCSum = 0;
 float directRollingAverage = 0.0;
+EXTMEM RFSample bigAssBuffer[RF_BUFFER_LENGTH];
+RFSample currentSample;
 
 bool displayInverted = false; // Inversion storage value
 uint8_t currentFrame = 0;
@@ -95,6 +99,13 @@ void setup()
 
 void loop() 
 {
+  // For each ADC, read the value
+  for (RFInputADC selectedADC : rfADCArray)
+  {
+    directADCReadValue = getADCMeasure(selectedADC);
+    currentSample = RFSample(selectedADC, directADCReadValue, directADCCounter);
+    bigAssBuffer[directADCCounter] = currentSample;
+  }
   // Do this first
   directADCReadValue = getADCMeasure(adcOutA);
   directADCCounter++; // Increment Counter
@@ -115,7 +126,7 @@ void loop()
     Serial.print(", Voltage: ");
     Serial.println((directRollingAverage / ADC_MAX_BIT_VALUE) * 5.0);
 
-
+    FILLARRAY(bigAssBuffer, SAMPLE_INVALID_VALUE);
     directADCCounter = 0;
     directADCSum = 0;
   }
@@ -149,11 +160,12 @@ void toggleLED()
 uint16_t getADCMeasure(RFInputADC selectedADC)
 {
   // Take selected ADC pin low to transfer data
+  SPI.beginTransaction(spiADCSettings);
   digitalWrite(selectedADC.getSelectPin(), LOW);
   uint8_t biggerByte = SPI.transfer(ADC_SPI_TRANSFER_BYTE); // Idk.
   uint8_t smallerByte = SPI.transfer(ADC_SPI_TRANSFER_BYTE);
   digitalWrite(selectedADC.getSelectPin(), HIGH); // End transfer of data
-
+  SPI.endTransaction();
 
   uint16_t calculatedValue; //= biggerByte + smallerByte;
   calculatedValue = (((uint16_t) biggerByte << 8 | smallerByte)); // Bit-bang math, don't stare.
