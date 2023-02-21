@@ -22,11 +22,17 @@
 #define ADC_BITS 14
 #define ADC_MAX_BIT_VALUE (pow(2, ADC_BITS) - 1)
 #define SPI_CLK_SPEED 100E6 // 100 MHz, maximum speed
+#define ADC_MAX_VOLTAGE 5.0 // ADC Reference maximum supply
+
+/* -- Data Structures --*/
+#define RF_INVALID_VALUE -256.0
 
 /*-- Enumerations & Structs --*/
 // Each RF ADC has its own enumeration. This makes handling them easy
 //const enum rfCSPins {outA = ADC_OUTA_CS_PIN, outB = ADC_OUTB_CS_PIN, outN = ADC_OUTN_CS_PIN, outP = ADC_OUTP_CS_PIN};
-#define RF_BUFFER_LENGTH 1000000 // Has to be an integer
+#define RAM_MAXIMUM 8E6 // 8MB ram
+#define SAMPLE_DATA_SIZE (4 * 4) + 2 // 4 Bytes, 4 Values. 2 bytes extra for necessary stuff. TODO: Make this an actual value
+#define RF_BUFFER_LENGTH (int) (RAM_MAXIMUM / SAMPLE_DATA_SIZE) // MUST Be less than 8MB of ram.
 #define FILLARRAY(a,n) a[0]=n, memcpy( ((char*)a)+sizeof(a[0]), a, sizeof(a)-sizeof(a[0]) );
 //#define SAMPLE_INVALID_VALUE RFSample()
-enum EnumADC { adcA, adcB, adcN, adcP};
+enum EnumADC {adcA, adcB, adcN, adcP};
