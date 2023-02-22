@@ -1,8 +1,4 @@
-#pragma once
-#include <iostream>
-//#include <RFInputADC.cpp>
 #include <defs.h>
-
 // DO I NEED THIS????
 class RFSample
 {
@@ -11,14 +7,16 @@ class RFSample
         float sampleValueB;
         float sampleValueN;
         float sampleValueP;
+        unsigned long timestamp;
     // Constructors
     public:
-        RFSample(float sampleA, float sampleB, float sampleN, float sampleP)
+        RFSample(float sampleA, float sampleB, float sampleN, float sampleP, long acquireTime)
         {
             sampleValueA = sampleA;
             sampleValueB = sampleB;
             sampleValueN = sampleN;
             sampleValueP = sampleP;
+            timestamp = acquireTime;
         }
 
         RFSample()
@@ -28,6 +26,7 @@ class RFSample
             sampleValueB = RF_INVALID_VALUE;
             sampleValueN = RF_INVALID_VALUE;
             sampleValueP = RF_INVALID_VALUE;
+            timestamp = 0L; // Invalid eventually
         }
 
         void setValue(EnumADC adc, float inputValue)
@@ -50,12 +49,26 @@ class RFSample
                     break; // Ignore
             }
         }
+
+        void setAcquireTime(unsigned long time)
+        {
+            timestamp = time;
+        }
         
         float getValue(EnumADC adc)
         {
             switch(adc)
             {
-
+                case adcA:
+                    return sampleValueA;
+                case adcB:
+                    return sampleValueB;
+                case adcN:
+                    return sampleValueN;
+                case adcP:
+                    return sampleValueP;
+                default:
+                    return RF_INVALID_VALUE;
             }
         }
 
@@ -82,7 +95,8 @@ class RFSample
         // Return Sample Values in [A, B, N, P] order as a string
         String toString()
         {
-            String stringOutput = String(sampleValueA) + ", ";
+            String stringOutput = String(timestamp) + ": ";
+            stringOutput += String(sampleValueA) + ", ";
             stringOutput += String(sampleValueB) + ", ";
             stringOutput += String(sampleValueN) + ", ";
             stringOutput += String(sampleValueP);

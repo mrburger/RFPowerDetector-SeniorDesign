@@ -1,20 +1,22 @@
-#pragma once
-#include <iostream>
 #include <defs.h>
 
 class RFInputADC
 {
     private:
-        uint16_t csp;
+        uint8_t csp;
         uint16_t scalingFactor; // Todo: Add calibration factors  
-        EnumADC adcReference;  
+        EnumADC adcReference;
+        String adcName;
+        boolean isEnabled;
 
     // Constructors
     public:
-        RFInputADC(uint16_t chipSelectPin, EnumADC reference)
+        RFInputADC(uint16_t chipSelectPin, EnumADC reference, String channelName)
         {
             csp = chipSelectPin;
             adcReference = reference;
+            adcName = channelName;
+            isEnabled = true; // Default to on. Has to be turned off manually
         }
 
         RFInputADC()
@@ -22,7 +24,13 @@ class RFInputADC
             return; // WOW Hacky
         }
 
-        uint16_t getSelectPin()
+        // Set if channel is enabled.
+        void setEnabled(boolean stateEnable)
+        {
+            isEnabled = stateEnable;
+        }
+
+        uint8_t getSelectPin()
         {
             return csp;
         }
@@ -30,5 +38,15 @@ class RFInputADC
         EnumADC getEnumADC()
         {
             return adcReference;
+        }
+
+        String toString()
+        {
+            return "ADC Channel " + adcName;
+        }
+
+        boolean getEnabled()
+        {
+            return isEnabled;
         }
 };
