@@ -1,21 +1,30 @@
 #include <defs.h>
-// DO I NEED THIS????
+
 class RFSample
 {
     private:
-        float sampleValueA;
-        float sampleValueB;
-        float sampleValueN;
-        float sampleValueP;
+        uint16_t sampleValueA;
+        uint16_t sampleValueB;
+        uint16_t sampleValueN;
+        uint16_t sampleValueP;
         unsigned long timestamp;
     // Constructors
     public:
-        RFSample(float sampleA, float sampleB, float sampleN, float sampleP, long acquireTime)
+        RFSample(uint16_t sampleA, uint16_t sampleB, uint16_t sampleN, uint16_t sampleP, long acquireTime)
         {
             sampleValueA = sampleA;
             sampleValueB = sampleB;
             sampleValueN = sampleN;
             sampleValueP = sampleP;
+            timestamp = acquireTime;
+        }
+
+        RFSample(volatile uint16_t sampleArray[ADC_NUM_CHANNELS], long acquireTime)
+        {
+            sampleValueA = sampleArray[adcA];
+            sampleValueB = sampleArray[adcB];
+            sampleValueN = sampleArray[adcN];
+            sampleValueP = sampleArray[adcP];
             timestamp = acquireTime;
         }
 
@@ -34,9 +43,11 @@ class RFSample
             switch(adc)
             {
                 case adcA:
+                    //Serial.println("A");
                     sampleValueA = inputValue;
                     break;
                 case adcB:
+                    //Serial.println("B");
                     sampleValueB = inputValue;
                     break;
                 case adcN:

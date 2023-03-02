@@ -3,26 +3,22 @@
 #include <iostream>
 #include <WString.h> // Teensy String Library
 #include <vector>
-
+#include <arm_math.h>
 
 
 /*-- Pins --*/
-#define ADC_OUTA_CS_PIN 9 // CS Pin for ADC X. Later, we will have multiple ADCs, numbered. ACTIVE LOW
-#define ADC_OUTB_CS_PIN 8
-#define ADC_OUTN_CS_PIN 7 // Not complete. may need to use hardware CS pins, or a clever solution
-#define ADC_OUTP_CS_PIN 6
+#define ADC_OUTA_CS_PIN 10 // CS Pin for ADC X. Later, we will have multiple ADCs, numbered. ACTIVE LOW
+#define ADC_OUTB_CS_PIN 9
+#define ADC_OUTN_CS_PIN 8 // Not complete. may need to use hardware CS pins, or a clever solution
+#define ADC_OUTP_CS_PIN 7
+#define SPI_SCK_PIN 27 // SCK1 Pin for Teensy 4.1
 
 /*-- Timings --*/
 #define LED_BLINK_DELAY 750 // milliseconds
-#define RF_SAMPLE_INTERVAL 1E6 // microseconds
-
-#define DISPLAY_ADDRESS 0x3C // 128x32 Display Address
-#define DISPLAY_WIDTH 128 // X Pixels
-#define DISPLAY_HEIGHT 32 // Y Pixels
-#define FRAME_COUNT 3 // Number of animated frames
-#define DISPLAY_BYTES 512 // Number of bytes in one frame
+#define RF_SAMPLE_INTERVAL 5 // microseconds
 
 /*-- ADC Details --*/
+#define ADC_NUM_CHANNELS 4 // 4 ADC to contend with
 #define ADC_SPI_TRANSFER_BYTE 0xFF // Equal to 255
 #define ADC_BITS 14
 #define ADC_MAX_BIT_VALUE (pow(2, ADC_BITS) - 1)
@@ -33,10 +29,8 @@
 #define RF_INVALID_VALUE -256.0
 
 /*-- Enumerations & Structs --*/
-// Each RF ADC has its own enumeration. This makes handling them easy
-//const enum rfCSPins {outA = ADC_OUTA_CS_PIN, outB = ADC_OUTB_CS_PIN, outN = ADC_OUTN_CS_PIN, outP = ADC_OUTP_CS_PIN};
 #define RAM_MAXIMUM 8E6 // 8MB ram
-#define SAMPLE_DATA_SIZE (4 * 6) + 2 // 4 Bytes, 4 Values. 2 bytes extra for necessary stuff. TODO: Make this an actual value
+#define SAMPLE_DATA_SIZE (4 * 8) + 2 // 4 Bytes, 4 Values. 2 bytes extra for necessary stuff. TODO: Make this an actual value
 #define RF_BUFFER_LENGTH (int) (RAM_MAXIMUM / SAMPLE_DATA_SIZE) // MUST Be less than 8MB of ram.
 #define FILLARRAY(a,n) a[0]=n, memcpy( ((char*)a)+sizeof(a[0]), a, sizeof(a)-sizeof(a[0]) );
 enum EnumADC {adcA, adcB, adcN, adcP};
