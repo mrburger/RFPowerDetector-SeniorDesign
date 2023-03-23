@@ -6,9 +6,8 @@
 #include <SPI.h> // SPI Library for ADC
 #include <Adafruit_GFX.h> // Graphics Lib
 #include <Adafruit_SSD1306.h> // Display Lib
-#include <RFInputADC.cpp> // RF Input ADC Object
-#include <RFSample.cpp> // RF Sample Structure
-#include <dataHelper.cpp> 
+
+#include <dataHelper.h> 
 
 /*-- Constants --*/
 const SPISettings spiADCSettings(SPI_CLK_SPEED, MSBFIRST, SPI_MODE0); // MCP33151 Maximums
@@ -34,11 +33,12 @@ IntervalTimer rfSampleTimer;
 /*-- Variables --*/
 int16_t adcReadA; // Prototyping ADC value. TODO: translate into voltage
 uint16_t adcReading; // Reading generic value
-volatile uint32_t sampleBufferSize = 0; // Counts number of measurements in a window
+volatile uint32_t rfSampleBufferLength = 0; // Counts number of measurements in a window
 int64_t adcSumA = 0;
 uint8_t biggerByte;
 uint8_t smallerByte;
 uint16_t calculatedValue;
+int incomingData;
 
 float directRollingAverage = 0.0;
 elapsedMicros rfSampleMicroseconds; // Counts microseconds since last buffer reset.
@@ -78,6 +78,12 @@ void setup()
   // Examples:
   // EXTMEM float phaseLookup[9999]; <- 
 
+  // IDEA:
+  // PUSH TO START, PUSH TO END
+  // Or, push to get previous buffer of data
+  // Long term data logging with simplified data acquisition (do not average until the end of data)
+
+
 
   pinMode(adcOutA.getSelectPin(), OUTPUT); // Initialize ADC CS Pins
   pinMode(adcOutB.getSelectPin(), OUTPUT);
@@ -85,8 +91,7 @@ void setup()
   pinMode(adcOutP.getSelectPin(), OUTPUT);
   // Disable N and P Channel for now (DOESN't WORK HERE)
   // adcOutA.setEnabled(false); // Disable A Channel
-  adcOutN.setEnabled(false);
-  adcOutP.setEnabled(false);
+
 
 
   // Testing SPI1 instead
@@ -112,21 +117,34 @@ void loop()
     //printChannelAverage(directRollingAverage, sampleBufferSize);
 
     // Get a random frame
-    int selectedRandomFrame = random(sampleBufferSize); // maximum is buffer size.
+    int selectedRandomFrame = random(rfSampleBufferLength); // maximum is buffer size.
     adcBufferPrintFrame(adcSampleBuffer[selectedRandomFrame], selectedRandomFrame);
+    Serial.println(rfSampleBufferLength);
+    Serial.send_now();
 
+    
     // Print some data
     for (RFInputADC* selectedADC : rfAdcList)
     {
-      // TODO: print only onceRFInputADC* selectedADC : rfAdcList
-      directRollingAverage = calculateChannelAverage(adcSampleBuffer, sampleBufferSize, *selectedADC);
+      directRollingAverage = calculateChannelAverage(adcSampleBuffer, rfSampleBufferLength, *selectedADC);
       printChannelAverage(directRollingAverage, *selectedADC);
     }
+    
     Serial.println(""); //newline
 
-    sampleBufferSize = 0;     // Reset sample buffer size & position
-    FILLARRAY(adcSampleBuffer, RFSample()); // Fill array with empty values
+    rfSampleBufferLength = 0;     // Reset sample buffer size & position
+    //FILLARRAY(adcSampleBuffer, RFSample()); // Fill array with empty values
     adcSumA = 0;
+  }
+
+  // check if USB Input available.
+  if (Serial.available() > 0)
+  {
+    incomingData = Serial.read();
+    if (incomingData = 'M')
+    {
+      // Change mode of acquisition and notify
+    }
   }
 }
 
@@ -146,57 +164,12 @@ void fastMeasure()
     }
     fastSampleArray[selectedADC->getEnumADC()] = fastSampleValue;
   }
-  if (sampleBufferSize == 0)
+  if (rfSampleBufferLength == 0)
   {
     rfSampleMicroseconds = 0; // Reset microsecond counter
   }
-  adcSampleBuffer[sampleBufferSize] = RFSample(fastSampleArray, rfSampleMicroseconds); // enter data
-  sampleBufferSize++;
-}
-
-// Take measurements on all ADC Channels.
-// ISSUES: SLOW! 
-// TODO: Compress this into a faster function call
-void takeMeasurements()
-{
-  currentRfSample = RFSample(); // set to empty value
-  adcReading = 0; // Reset every time
-  // For each enabled ADC, read the value
-  
-  for (RFInputADC* selectedADC : rfAdcList)
-  {
-    // Verify channel enabled
-    if (selectedADC->getEnabled())
-    {
-      currentRfSample.setValue(selectedADC->getEnumADC(), getADCMeasure(*selectedADC));
-    }
-    /*
-    else
-    {
-      Serial.println(selectedADC->toString() + " Disabled");
-    }
-    */
-    //Serial.println(String(selectedADC.toString()) + ": " + String(adcReading)); // Print channel and reading
-    //delay(20); //Testing to see if ADC overwhelm the BUS
-  }
-
-  if (sampleBufferSize == 0) // start of new array
-  {
-    rfSampleMicroseconds = 0; // Reset sample time 
-  }
-  currentRfSample.setAcquireTime(rfSampleMicroseconds); // Microseconds? I dont know if this will work
-  //Serial.println(""); // Newline after completion
-
-  // TODO: Buffer management. What do if the buffer length is exceeded? Clearly something needs to be done.
-  // Solutions could involve waiting until the buffer is full and THEN doing all the math. Single trigger
-  // Or in constant measurement, could calculate everything and write to SD card.
-  // Constant measurements would have to essentially be "clocked" or time-limited, so buffer isn't exceeded.
-  // For now, ignore this shit.
-
-  adcSampleBuffer[sampleBufferSize] = currentRfSample;
-  //adcReadA = currentSample.getValue(adcA); // A Channel Sum
-  sampleBufferSize++; // Increment Counter
-  //adcSumA += adcReadA; // Add to rolling sum
+  adcSampleBuffer[rfSampleBufferLength] = RFSample(fastSampleArray, rfSampleMicroseconds); // enter data
+  rfSampleBufferLength++;
 }
 
 // Print a RFSample from the External PSRAM Buffer
@@ -206,6 +179,7 @@ void adcBufferPrintFrame(RFSample selectedSample, int selectedFrame)
   Serial.print(": ");
   Serial.println(selectedSample.toString());
   Serial.println(""); // Empty line
+  Serial.send_now();
 }
 
 
@@ -218,7 +192,7 @@ void printSampleInformationHeader(RFSample sampleBuffer[], long sampleCount)
   Serial.print(sampleCount);
   Serial.print(" Start: " + sampleBuffer[0].toString());
   Serial.println(""); // Newline
-
+  Serial.send_now();
 }
 
 // Just print data. Not complex.
@@ -230,6 +204,7 @@ void printChannelAverage(float sampleAverage, RFInputADC selectedADC)
   Serial.print(", ");
   Serial.print(getFormattedString(getVoltageFromADC(sampleAverage), VOLTAGE_SYMBOL));
   Serial.println(""); // Empty line
+    Serial.send_now();
 }
 
 // Converts the ADC reading to a more friendly voltage.
@@ -281,9 +256,9 @@ uint16_t getADCMeasure(u_int8_t adcCSPin)
 
   //((((uint16_t) biggerByte) << 8 | smallerByte)); // Bit-bang math, don't stare.
   calculatedValue = biggerByte;
-  calculatedValue << 8;
+  calculatedValue <<= 8;
   calculatedValue |= smallerByte;
-  calculatedValue >> 2; // 14-bit device, shift once? or twice? Datasheet says twice
+  calculatedValue >>= 2; // 14-bit device, shift once? or twice? Datasheet says twice
   return calculatedValue;
 }
 

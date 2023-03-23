@@ -15,7 +15,8 @@
 
 /*-- Timings --*/
 #define LED_BLINK_DELAY 750 // milliseconds
-#define RF_SAMPLE_INTERVAL 5 // microseconds
+#define RF_SAMPLES_PER_SECOND 200E3 // Samples we want to take per second
+#define RF_SAMPLE_INTERVAL 1E6 / RF_SAMPLES_PER_SECOND // microseconds
 
 /*-- ADC Details --*/
 #define ADC_NUM_CHANNELS 4 // 4 ADC to contend with
@@ -26,7 +27,7 @@
 #define ADC_MAX_VOLTAGE 5.0 // ADC Reference maximum supply
 
 /* -- Data Structures --*/
-#define RF_INVALID_VALUE -256.0
+#define RF_INVALID_VALUE 65535 // 16 bit maximum
 
 /*-- Enumerations & Structs --*/
 #define RAM_MAXIMUM 8E6 // 8MB ram

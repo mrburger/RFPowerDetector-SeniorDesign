@@ -1,13 +1,6 @@
-#include <defs.h>
-#include <RFSample.cpp>
-#include <RFInputADC.cpp>
-
+#include <dataHelper.h>
 
 /*-- Constants --*/
-
-/*-- Function Definitions --*/
-double calculateChannelSum(RFSample sampleBuffer[], long sampleCount, RFInputADC selectedADC);
-double calculateChannelAverage(RFSample sampleBuffer[], long sampleCount, RFInputADC selectedADC);
 
 /*-- Variables --*/
 
