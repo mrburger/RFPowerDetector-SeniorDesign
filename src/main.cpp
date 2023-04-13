@@ -23,11 +23,12 @@ void printChannelAverage(float sampleAverage, RFInputADC selectedADC);
 void adcBufferPrintFrame(RFSample selectedSample, int selectedFrame);
 String getFormattedString(double valueInput, String measureUnit);
 float getVoltageFromADC(uint16_t adcReading);
+void printSampleInformationHeader(RFSample sampleBuffer[], long sampleCount);
 
 
 /*-- Constructors --*/
 Metro blinkTimer = Metro(LED_BLINK_DELAY); // Idle status LED Blink
-Metro serialOutputTimer = Metro(1E3); // TODO: Make this prettier.
+Metro serialOutputTimer = Metro(SERIAL_OUTPUT_INTERVAL); // TODO: Make this prettier.
 IntervalTimer rfSampleTimer; 
 
 /*-- Variables --*/
@@ -39,6 +40,8 @@ uint8_t biggerByte;
 uint8_t smallerByte;
 uint16_t calculatedValue;
 int incomingData;
+volatile float voltageValue; // Stores voltage value
+boolean booleanRXKey = true;
 
 float directRollingAverage = 0.0;
 elapsedMicros rfSampleMicroseconds; // Counts microseconds since last buffer reset.
@@ -89,10 +92,10 @@ void setup()
   pinMode(adcOutB.getSelectPin(), OUTPUT);
   pinMode(adcOutN.getSelectPin(), OUTPUT);
   pinMode(adcOutP.getSelectPin(), OUTPUT);
-  // Disable N and P Channel for now (DOESN't WORK HERE)
-  // adcOutA.setEnabled(false); // Disable A Channel
-
-
+  adcOutA.setEnabled(true);
+  adcOutB.setEnabled(true);
+  adcOutN.setEnabled(false);
+  adcOutP.setEnabled(false);
 
   // Testing SPI1 instead
   SPI1.begin();
@@ -109,28 +112,51 @@ void loop()
   {
     toggleLED();
   }
-
   if (serialOutputTimer.check() == 1)
   {
-    //directRollingAverage = adcSumA / ((float) sampleBufferSize); // basic.
+    if (!booleanRXKey)
+    {
+        //directRollingAverage = adcSumA / ((float) sampleBufferSize); // basic.
     // Defer basic printing data
     //printChannelAverage(directRollingAverage, sampleBufferSize);
 
     // Get a random frame
+
+
+    for (int i = 0; i <= 10; i++)
+    {
+      Serial.println(""); //newline
+    }
+
+    printSampleInformationHeader(adcSampleBuffer, (long) rfSampleBufferLength);
+
     int selectedRandomFrame = random(rfSampleBufferLength); // maximum is buffer size.
     adcBufferPrintFrame(adcSampleBuffer[selectedRandomFrame], selectedRandomFrame);
-    Serial.println(rfSampleBufferLength);
-    Serial.send_now();
+    //Serial.println(rfSampleBufferLength);
 
     
     // Print some data
     for (RFInputADC* selectedADC : rfAdcList)
     {
-      directRollingAverage = calculateChannelAverage(adcSampleBuffer, rfSampleBufferLength, *selectedADC);
-      printChannelAverage(directRollingAverage, *selectedADC);
+      if (selectedADC->getEnabled())
+      {
+        directRollingAverage = calculateChannelAverage(adcSampleBuffer, rfSampleBufferLength, *selectedADC);
+        printChannelAverage(directRollingAverage, *selectedADC);
+      }
     }
-    
-    Serial.println(""); //newline
+    }
+    else if (booleanRXKey)
+    {
+      // PRINT MORE THAN CHANNEL A!
+      for (RFInputADC* selectedADC : rfAdcList)
+      {
+        directRollingAverage = calculateChannelAverage(adcSampleBuffer, rfSampleBufferLength, *selectedADC);
+        voltageValue = getVoltageFromADC((uint16_t) directRollingAverage);
+        Serial.print((float)(voltageValue / DBM_SLOPE) + DBM_INTERCEPT); // Print Channels
+        Serial.print(", ");
+      }
+      Serial.println(NEWLINE_CHAR);
+    }
 
     rfSampleBufferLength = 0;     // Reset sample buffer size & position
     //FILLARRAY(adcSampleBuffer, RFSample()); // Fill array with empty values
@@ -141,9 +167,10 @@ void loop()
   if (Serial.available() > 0)
   {
     incomingData = Serial.read();
-    if (incomingData = 'M')
+    if (incomingData == 'M')
     {
       // Change mode of acquisition and notify
+      booleanRXKey = !booleanRXKey;
     }
   }
 }
@@ -179,7 +206,6 @@ void adcBufferPrintFrame(RFSample selectedSample, int selectedFrame)
   Serial.print(": ");
   Serial.println(selectedSample.toString());
   Serial.println(""); // Empty line
-  Serial.send_now();
 }
 
 
@@ -192,7 +218,6 @@ void printSampleInformationHeader(RFSample sampleBuffer[], long sampleCount)
   Serial.print(sampleCount);
   Serial.print(" Start: " + sampleBuffer[0].toString());
   Serial.println(""); // Newline
-  Serial.send_now();
 }
 
 // Just print data. Not complex.
@@ -202,9 +227,20 @@ void printChannelAverage(float sampleAverage, RFInputADC selectedADC)
   Serial.print(selectedADC.toString() + ": ");
   Serial.print(sampleAverage);
   Serial.print(", ");
-  Serial.print(getFormattedString(getVoltageFromADC(sampleAverage), VOLTAGE_SYMBOL));
+  float voltageValue = getVoltageFromADC(sampleAverage);
+ 
+  if (selectedADC.getEnumADC() == adcA)
+  {
+    voltageValue *= 1; //HAX MAN
+    voltageValue += selectedADC.getOffsetVoltage();
+  }
+
+  Serial.print(getFormattedString(voltageValue, VOLTAGE_SYMBOL));
+  Serial.print(", ");
+  //Serial.print(((voltageValue - 3.05) / .051)); // 0.57 too much (dBm)
+  Serial.print((float)(voltageValue / DBM_SLOPE) + DBM_INTERCEPT);
+  Serial.print(DECIBEL_MILLIWATT_SYMBOL); // TODO
   Serial.println(""); // Empty line
-    Serial.send_now();
 }
 
 // Converts the ADC reading to a more friendly voltage.
@@ -255,10 +291,14 @@ uint16_t getADCMeasure(u_int8_t adcCSPin)
   SPI1.endTransaction();
 
   //((((uint16_t) biggerByte) << 8 | smallerByte)); // Bit-bang math, don't stare.
-  calculatedValue = biggerByte;
-  calculatedValue <<= 8;
-  calculatedValue |= smallerByte;
-  calculatedValue >>= 2; // 14-bit device, shift once? or twice? Datasheet says twice
+  //Serial.print(biggerByte, BIN); Serial.print(" "); Serial.println(smallerByte, BIN);
+  calculatedValue = (uint16_t) biggerByte;
+  calculatedValue = calculatedValue << 8;
+  //Serial.println(calculatedValue, BIN);
+  calculatedValue = calculatedValue | ((uint16_t) smallerByte);
+  calculatedValue = calculatedValue >> 1; // 14-bit device, shift once? or twice? Datasheet says twice
+  //calculatedValue = calculatedValue & 0x3FFF; // Stuff FOR DEBUG, 0x3FFF
+  //Serial.println(calculatedValue, BIN); // Debug
   return calculatedValue;
 }
 

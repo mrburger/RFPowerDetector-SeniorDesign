@@ -8,6 +8,7 @@ class RFInputADC
         EnumADC adcReference;
         String adcName;
         boolean isEnabled;
+        float offsetVoltage;
 
     // Constructors
     public:
@@ -17,6 +18,7 @@ class RFInputADC
             adcReference = reference;
             adcName = channelName;
             isEnabled = true; // Default to on. Has to be turned off manually
+            offsetVoltage = 0.025; // Volts
         }
 
         RFInputADC()
@@ -48,5 +50,10 @@ class RFInputADC
         boolean getEnabled()
         {
             return isEnabled;
+        }
+
+        float getOffsetVoltage()
+        {
+            return offsetVoltage;
         }
 };

@@ -4,6 +4,8 @@
 #include <WString.h> // Teensy String Library
 #include <vector>
 #include <arm_math.h>
+#include <circular_buffer.h>
+
 
 
 /*-- Pins --*/
@@ -15,8 +17,10 @@
 
 /*-- Timings --*/
 #define LED_BLINK_DELAY 750 // milliseconds
+#define SERIAL_OUTPUT_INTERVAL 250 // ms
 #define RF_SAMPLES_PER_SECOND 200E3 // Samples we want to take per second
 #define RF_SAMPLE_INTERVAL 1E6 / RF_SAMPLES_PER_SECOND // microseconds
+
 
 /*-- ADC Details --*/
 #define ADC_NUM_CHANNELS 4 // 4 ADC to contend with
@@ -25,6 +29,7 @@
 #define ADC_MAX_BIT_VALUE (pow(2, ADC_BITS) - 1)
 #define SPI_CLK_SPEED 100E6 // 100 MHz, maximum speed
 #define ADC_MAX_VOLTAGE 5.0 // ADC Reference maximum supply
+#define EXTRA_CHANNELS false // Extra Channel Support
 
 /* -- Data Structures --*/
 #define RF_INVALID_VALUE 65535 // 16 bit maximum
@@ -40,5 +45,12 @@ enum EnumADC {adcA, adcB, adcN, adcP};
 #define VOLTAGE_SYMBOL "V" // Volts SI symbol
 #define AMPERAGE_SYMBOL "A"
 #define MILLI_PREFIX_SYMBOL "m" // milli SI prefix, 1E-3
+#define DECIBEL_SYMBOL "dB"
+#define DECIBEL_MILLIWATT_SYMBOL "dBm"
 #define MILLI_SCALE_FACTOR 1E3 // 1.0 is 1000 milli
 #define MEASUREMENT_DECIMALS 2 // How many decimal places to display by default
+#define NEWLINE_CHAR '\n' // New Line
+
+/*-- Calculations --*/
+#define DBM_SLOPE 0.0516 // 51.6 mV / dB 0.0516
+#define DBM_INTERCEPT -59 // -59 dBm @ 0.0V
