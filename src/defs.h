@@ -17,7 +17,7 @@
 
 /*-- Timings --*/
 #define LED_BLINK_DELAY 750 // milliseconds
-#define SERIAL_OUTPUT_INTERVAL 250 // ms
+#define SERIAL_OUTPUT_INTERVAL 250 // ms, limited by serial output speed
 #define RF_SAMPLES_PER_SECOND 200E3 // Samples we want to take per second
 #define RF_SAMPLE_INTERVAL 1E6 / RF_SAMPLES_PER_SECOND // microseconds
 
